@@ -1,9 +1,9 @@
-#tsCluster
+# tsCluster
 
 A Python framework for interactively examining time-series data collected in *runs* and *sessions* (example fMRI) from different classes/groups of objects (example tinnitus patients vs controls).
 
 ### Data-set
-Data set is not included for confidentiality reasons. Import binaries.zip and data.zip from the DynamicConnectivity folder on the server.
+Data set is not included for confidentiality reasons. Import binaries.zip and data.zip from the DynamicConnectivity folder on the server and place them in the `binaries` folder or `tsCluster/data` folder. 
 
 
 ## Instructions
