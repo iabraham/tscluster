@@ -7,10 +7,9 @@ __pycache__/
 *.so
 
 # Sensitive data
-data/
-data_*
-tsCluster/data/
-binaries/
+data/*
+tsCluster/data/*
+binaries/*
 
 # Distribution / packaging
 .Python
