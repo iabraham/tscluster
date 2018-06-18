@@ -14,7 +14,9 @@ We assume you have anaconda installed. There are two environment files.
 
 ### Interactive access
 
-For interactive access create a conda environment using the `ysjupyt.yml` file. Then `cd` into the folder you want and run `jupyter notebook`. Open the `interactive.ipynb` notebook.
+For interactive access create a conda environment using the `ysjupyt.yml` file. Then `cd` into the folder you want and run `jupyter notebook`. Open the `interactive.ipynb` notebook and run:
+  
+  `from for_jupyter import all_data`
 
 ### Running on cluster
 
