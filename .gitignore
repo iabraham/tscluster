@@ -6,6 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+# Sensitive data
+data/
+data_*
+tsCluster/data/
+binaries/
+
 # Distribution / packaging
 .Python
 env/
