@@ -179,7 +179,7 @@ class TsCluster(Base.TsBase):
         mpl.title('Scatter plot')
         mpl.show()
 
-    def show_time_series(self, sub, run=None, session=None):
+    def show_time_series(self, sub, run=None, session=None, rois=None):
         """ Function to display the time series data.
 
             Arguments:
@@ -194,8 +194,19 @@ class TsCluster(Base.TsBase):
 
         def plotter(sample):
             """ Helper function that does actually plotting. """
-            for index, row in enumerate(sample['TimeSeries'].tolist()):
-                mpl.plot(row, label=self.rois[index])
+            if not rois:
+                mpl.figure()
+                for index, row in enumerate(sample['TimeSeries'].tolist()):
+                    mpl.plot(row, label=self.rois[index])
+            else:
+                mpl.figure()
+                for roi in rois:
+                    try:
+                        idx = self.rois.index(roi)
+                        mpl.plot(sample['TimeSeries'][idx,:].tolist(), label=roi)
+                    except ValueError:
+                        print('Error! ROI ' + roi + ' not found!')
+                        raise KeyError
             mpl.title(sample['Name'] + '-' + sample['Session'] + '-' + sample['Run'])
             mpl.xlabel('Time')
             mpldatacursor.datacursor(formatter='{label}'.format)
