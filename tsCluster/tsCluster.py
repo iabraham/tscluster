@@ -1,6 +1,7 @@
 from tsCluster import tsBase as Base
 import numpy as np
 from numpy import random
+from scipy.signal import cheby2, lfilter, butter, filtfilt, bessel
 import matplotlib
 matplotlib.use('Qt5Agg')
 from matplotlib import pyplot as mpl
@@ -27,11 +28,11 @@ class TsCluster(Base.TsBase):
         """ Function that partitions data (all of the same group) into test_train pairs.
 
             Arguments:
-                named_data : A list of tuples with name, and data
-                key :  A list of groups (i.e. a list of strings)
+                named_data: A list of tuples with name, and data
+                key:  A list of groups (i.e. a list of strings)
                 value: A float specifying how much of a particular group to include in training.
         """
-        train_label, train_data, test_label, test_data, k, j = list(), list(), list(), list(), 1, 1
+        train_label, train_data, test_label, test_data, k, j = list(), list(), list(), list(), 0, 0
         (names, data) = zip(*named_data)
 
         # We don't want the same subject showing up in test and train samples
@@ -44,7 +45,7 @@ class TsCluster(Base.TsBase):
                 for idx in idxs:
                     train_data.append(data[idx])
                     train_label.append(key)
-                    o_names.append(k - 1)
+                    o_names.append(k)
                 k += 1
             elif j < threshold:
                 for idx in idxs:
@@ -57,8 +58,8 @@ class TsCluster(Base.TsBase):
         """ Function to get projected data by group.
 
             Keyword arguments:
-                n -- The number of dimensions to project down to
-                dec -- A decorator function to for additional processing that acts on lists.
+                n: The number of dimensions to project down to
+                dec: A decorator function to for additional processing that acts on lists.
 
             Returns a list or dec(list)
         """
@@ -79,9 +80,9 @@ class TsCluster(Base.TsBase):
         """ Function to generate test train data sets.
 
             Keyword arguments:
-                n -- The number of projections to project down to, has effect only if project=True and mat='FlatULM'
-                mat -- The type of matrix to get, either 'FlatULM','FlatSLM' or 'FlatCM'
-                project -- Whether to perform dimension reduction using PCA, default is False
+                n: The number of projections to project down to, has effect only if project=True and mat='FlatULM'
+                mat: The type of matrix to get, either 'FlatULM','FlatSLM' or 'FlatCM'
+                project: Whether to perform dimension reduction using PCA, default is False
 
             Function also takes string and a float between 0 and 1 as keyword argument pairs. The float specifies the
             percentage of samples of the group specified by the string to have in the training data set. The test data
@@ -134,7 +135,7 @@ class TsCluster(Base.TsBase):
         """ Function to make a 2D scatter plot of data by group using covariance structure to project.
 
             Keyword arguments:
-                fig -- Specifies a figure number for call to matplotlib module
+                fig: Specifies a figure number for call to matplotlib module
         """
         import mpldatacursor
 
@@ -170,23 +171,23 @@ class TsCluster(Base.TsBase):
         scatters = [artist for ax in axes for artist in plotted_artists(ax)]
 
         point_labels = dict(zip(scatters, per_scatter_label))
-        mpldatacursor.datacursor(formatter=formatter, point_labels=point_labels)
+        mpldatacursor.datacursor(formatter=formatter, point_labels=point_labels, display='multiple')
         ax.legend()
 
         ax.grid(True)
         mpl.xlabel('Principal direction 1')
         mpl.ylabel('Principal direction 2')
         mpl.title('Scatter plot')
-        mpl.show()
+        mpl.show(block=False)
 
     def show_time_series(self, sub, run=None, session=None, rois=None):
         """ Function to display the time series data.
 
             Arguments:
-                sub -- The name of the subject whose time series data should be displayed.
-            Keyword arguments:
-                run -- Which run the plot should correspond to
-                session -- Which session the plot should correspond to
+                sub: The name of the subject whose time series data should be displayed.
+                run: Which run the plot should correspond to (optional)
+                session: Which session the plot should correspond to (optional)
+                rois: Which ROIs to plot, by name (optional)
 
             If run and session are not specified, plots it for all matches of subject name.
         """
@@ -210,7 +211,7 @@ class TsCluster(Base.TsBase):
             mpl.title(sample['Name'] + '-' + sample['Session'] + '-' + sample['Run'])
             mpl.xlabel('Time')
             mpldatacursor.datacursor(formatter='{label}'.format)
-            mpl.show()
+            mpl.show(block=False)
 
         # Get all samples with name match
         temp = [sample for sample in self.samples if sample['Name'] == sub]
@@ -238,12 +239,10 @@ class TsCluster(Base.TsBase):
         """ A function to visualize the matrices associated with samples.
 
             Arguments:
-                sub -- The subject identifier as a string
-
-            Keyword arguments:
-                mat -- The matrix to display. A string which must be one of 'ULM', 'CM' and 'SLM'
-                session -- Session identifier for the matrix of interest
-                run -- Run in the session specified.
+                sub: The subject identifier as a string
+                mat: The matrix to display. A string which must be one of 'ULM', 'CM' and 'SLM'.
+                session: Session identifier for the matrix of interest (optional)
+                run: Run in the session specified (optional).
 
             If keyword arguments are not specified function displays the unsorted lead matrix for all instances of the
             subject that it found.
@@ -255,8 +254,8 @@ class TsCluster(Base.TsBase):
             """ Helper function that does the actual plotting.
 
                 Arguments:
-                    sample -- An element of self.samples
-                    matrix -- A string specifying which matrix to visualize. Must be 'ULM', 'SLM' of 'CM'
+                    sample: An element of self.samples
+                    matrix: A string specifying which matrix to visualize. Must be 'ULM', 'SLM' of 'CM'
             """
             mat_name = {'CM': 'Correlation Matrix - ', 'ULM': 'Lead Matrix - ', 'SLM': 'Sorted Lead Matrix - '}
             mpl.figure()
@@ -299,11 +298,10 @@ class TsCluster(Base.TsBase):
         """ Function to plot the auto-correlation of a single time series.
 
             Arguments:
-                sub -- Subject identifier as string
-            Keyword arguments:
-                roi -- An integer or string specifying the region of interest to plot auto-correlation over. If not
+                sub: Subject identifier as string
+                roi: An integer or string specifying the region of interest to plot auto-correlation over. If not
                     specified then it is 0.
-                norm -- A boolean specifying whether to normalize the time series or not before auto-correlation is
+                norm: A boolean specifying whether to normalize the time series or not before auto-correlation is
                     calculated. Default is False.
         """
 
@@ -335,8 +333,10 @@ class TsCluster(Base.TsBase):
             """Mean centers the time series
 
                 Arguments:
-                    Z -- A matrix or a vector. If matrix then each row is a variable, and columns are instances at
+                    Z: A matrix or a vector. If matrix then each row is a variable, and columns are instances at
                         different times.
+                Returns:
+                    The mean centered data
             """
             return z - np.mean(z, axis=1)[:, np.newaxis]
 
@@ -344,9 +344,11 @@ class TsCluster(Base.TsBase):
             """ Computes serial correlation given a wave and a lag amount.
 
                 Arguments:
-                    wave -- A single variable time series, i.e. a vector.
-                Keyword arguments:
-                    lag -- How much to lag the time series by. Default is 1.
+                    wave: A single variable time series, i.e. a vector.
+                    lag: How much to lag the time series by. Default is 1.
+
+                Returns:
+                    corr: The correlation
             """
             n = len(wave)
             y1 = wave[lag:]
@@ -358,7 +360,11 @@ class TsCluster(Base.TsBase):
             """ Computes the auto correlation from lag = 0 to lag = len(wave) -1
 
                 Arguments:
-                    wave -- A vector
+                    wave: A vector
+
+                Returns:
+                    time_lags: The lag amounts
+                    correlates: The correlation corresponding to the lag amount
             """
             time_lags = range(len(wave) - 1)
             correlates = [serial_corr(wave, lag) for lag in time_lags]
@@ -378,3 +384,52 @@ class TsCluster(Base.TsBase):
             mpl.stem(lags, corrs)
             mpl.title(sub + ' in ' + sample['Run'] + ' of ' + 'Session-' + sample['Session'] + '\n' + roi)
         mpl.show(block=True)
+
+    def __augment__(self, aug_samples):
+        """ Function that adds augmented data back to the data set.
+
+            Arguments:
+                aug_samples: The list of dicts containing sample data that are identical items in to self.samples
+        """
+        self.samples.extend(aug_samples)
+        self.recompute()
+        self.reset()
+
+    def smoothen(self, low, high, fs=0.5, filt='bessel'):
+        """ A function to change the time-series data so that it is band pass filtered.
+
+            Arguments:
+                low: The low frequency cut-off in Hz
+                high: The high frequency cut-off in Hz
+                fs: The sampling frequency
+                filt: The filter type, either 'chebyshev', 'butterworth' or 'bessel'
+
+        The band pass filter is implemented by way of a butter-worth filter of order 8. Smoothening is
+        destructive, i.e. the original data cannot be recovered.
+        """
+        for sample in self.samples:
+            for idx,roi in enumerate(sample['TimeSeries']):
+                smooth_roi = self.bandpass_filter(roi, low, high, fs, filt=filt)
+                sample['TimeSeries'][idx,:] = smooth_roi
+
+        self.recompute()
+
+    def bandpass_filter(self, data, lowcut, highcut, fs, order=9, filt='bessel'):
+        """ The filter function called by 'smoothen' method of the class. """
+        b, a = self.bandpass(lowcut, highcut, fs, filt, order=order)
+        y = filtfilt(b, a, data)
+        return y
+
+    def bandpass(self, lowcut, highcut, fs, filt, order=9):
+        """ Helper function to implement band-pass filtering using the chosen filter"""
+        nyq = 0.5 * fs
+        low = lowcut / nyq
+        high = highcut / nyq
+        # Get filter coefficients
+        filters = {'bessel': bessel(order, [low, high], btype='band'),
+                   'chebyshev': cheby2(order, 4, [low, high], btype='band'),
+                   'butterworth': butter(order, [low, high], btype='band')}
+        b, a = filters[filt]
+        return b, a
+
+

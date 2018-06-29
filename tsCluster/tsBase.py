@@ -2,6 +2,7 @@ import numpy as np
 from tsCluster.cyclicAnalysis import cyclic_analysis, norms, trend_removals
 
 
+
 class TsBase:
     """A module to hold time series data collected in runs and sessions.
 
@@ -76,7 +77,7 @@ class TsBase:
         """ Initializes an instance of the TsCluster module.
 
             Keyword Arguments:
-                name -- A name for the instance, if not specified tries to infer name of variable it is being assigned
+                name: A name for the instance, if not specified tries to infer name of variable it is being assigned
 
             When called as:
                 var_name = TsCluster()
@@ -121,7 +122,7 @@ class TsBase:
         if not self.samples:
             return 'Uninitialized'
         else:
-            str0 = '----\t' + __name__ + ':' + self.name + '\t----\n'
+            # str0 = '----\t' + __name__ + ':' + self.name + '\t----\n'
             str1 = 'Num of samples: \t' + str(len(self.samples)) + '\n'
             group_data = {group: len([sample['Name'] for sample in self.samples if
                                       sample['Group'] == group]) for group in self.groups}
@@ -134,16 +135,16 @@ class TsBase:
             str8 = 'Number of removed samples: \t' + str(len(self.removed_samples)) + '\n'
             str9 = 'Removal counter: \t' + str(self.removed_counter) + '\n'
 
-        return str0 + str1 + str2 + str3 + str4 + str5 + str6 + str7 + str8 + str9
+        return str1 + str2 + str3 + str4 + str5 + str6 + str7 + str8 + str9
 
     def __default_constructor__(self, file_list, name_structure):
         """ The default constructor for the class.  Calls load_data() and called by from_directory() or  from_manual().
 
             Arguments:
-                file_list -- Usually  a list of strings, where each string is a valid filename pointing to a text file
+                file_list: Usually  a list of strings, where each string is a valid filename pointing to a text file
                     that holds the multivariate time series data. It can also be a dictionary whose keys are groups in
                     the analysis and values are list of strings corresponding to file names in the analysis.
-                name_structure -- A dictionary specifying the naming convention in use.
+                name_structure: A dictionary specifying the naming convention in use.
         """
         self.norm = name_structure['norm']
         self.trend_removal = name_structure['trend_removal']
@@ -173,8 +174,8 @@ class TsBase:
         """ Function that actually loads the data. Called by default_constructor()
 
             Arguments:
-                file_list -- A dictionary specifying groups in the data set and the associated file names.
-                name_structure -- A dictionary specifying naming convention in use.
+                file_list: A dictionary specifying groups in the data set and the associated file names.
+                name_structure: A dictionary specifying naming convention in use.
         """
 
         def parse_name(file_name):
@@ -324,9 +325,9 @@ class TsBase:
     def from_directory(self, name_structure=None, directory=None):
         """ Constructor to load data from a directory with a naming convention. Calls default_constructor(). 
 
-            Keyword arguments:
-                name_structure -- A dictionary specifying the naming convention in use in the directory
-                directory -- A string specifying the directory to load data form
+            Arguments:
+                name_structure: A dictionary specifying the naming convention in use in the directory
+                directory: A string specifying the directory to load data form
 
             If arguments are not provided uses defaults specified by the class variables.
         """
@@ -374,8 +375,8 @@ class TsBase:
         """ Function to add or remove samples from analysis. 
         
             Arguments:
-                op -- The operation to perform, 'add' or 'rem' (remove). Type is string.
-                idxs -- The names of the subjects that you want to add or remove from analysis. 
+                op: The operation to perform, 'add' or 'rem' (remove). Type is string.
+                idxs: The names of the subjects that you want to add or remove from analysis.
                     Type is a list of strings
         """
         if not type(idxs) == list:
@@ -487,9 +488,8 @@ class TsBase:
         """ Function to add session or run level data back in to the analysis.
 
             Arguments:
-                idx_session -- The session identifier for the session that is to be removed.
-            Keyword arguments:
-                idx_run -- The specific run in idx_session to be removed.
+                idx_session: The session identifier for the session that is to be removed.
+                idx_run: The specific run in idx_session to be removed (optional).
 
             If idx_run is not provided, all matches of idx_session amongst the removed samples are added back in to
             the analysis (regardless of location)
@@ -611,8 +611,8 @@ class TsBase:
         """ Function to add or remove a particular group from analysis. Useful for test train data sets.
 
             Arguments:
-                op -- String 'add' for adding and 'rem' for removing.
-                group -- String specifying which group to add or remove.
+                op: String 'add' for adding and 'rem' for removing.
+                group: String specifying which group to add or remove.
 
             Note that there is no removed_group counter. Instead self.groups shows groups that are present.
         """
@@ -642,10 +642,10 @@ class TsBase:
         """ Function to edit a specific time series entity. MUST CALL recompute manually.
 
             Arguments:
-                sub -- Name of subject to remove. String.
-                run -- Specific run of that subject to edit. String.
-                session -- The session the specified run belongs to. String.
-                edit_idx -- Numpy s_ objects corresponding to slices in the time series that one wishes to KEEP.
+                sub: Name of subject to remove. String.
+                run: Specific run of that subject to edit. String.
+                session: The session the specified run belongs to. String.
+                edit_idx: Numpy s_ objects corresponding to slices in the time series that one wishes to KEEP.
 
             All arguments are required to prevent accidental edits to time series data.
         """
@@ -670,7 +670,7 @@ class TsBase:
         """ Function to remove a region of interest from the data set (from all samples). Must call recompute.
 
             Arguments:
-                roi -- The roi to be removed specified as a string.
+                roi: The roi to be removed specified as a string.
 
             Function is destructive, a roi removed from analysis cannot be added back in.  The instance's recompute
             method must be called manually.
