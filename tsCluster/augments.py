@@ -23,20 +23,26 @@ def mixer(t1, t2, model, item, freq=2):
     """
 
     from statsmodels.tsa.seasonal import seasonal_decompose as s_dec
-
+    import random 
+    
     r1 = s_dec(t1, freq=freq, model=model)
     r2 = s_dec(t2, freq=freq, model=model)
-
+    
+    slack = random.uniform(1.0, 1.2)
+    
+    sgn1 = [-1,1][random.randrange(2)]
+    sgn2 = [-1,1][random.randrange(2)]
+    
     if (item, model) == ('residue', 'additive'):
-        return r1.seasonal + r1.trend + 1.1*r2.resid, r2.seasonal + r2.trend + 1.1*r1.resid
+        return r1.seasonal + r1.trend + slack*sgn1*r2.resid, r2.seasonal + r2.trend + slack*sgn2*r1.resid
+    elif (item, model) == ('trend', 'additive'):
+        return r1.seasonal + slack*sgn1*r2.trend + r1.resid, r2.seasonal + slack*sgn2*r1.trend + r2.resid
+    elif (item, model) == ('seasonal', 'additive'):
+        return slack*sgn1*r2.seasonal + r1.trend + r1.resid, slack*sgn2*r1.seasonal + r2.trend + r2.resid
     elif (item, model) == ('residue', 'multiplicative'):
         return r1.seasonal * r1.trend * r2.resid, r2.seasonal * r2.trend * r1.resid
     elif (item, model) == ('trend', 'multiplicative'):
         return r1.seasonal * r2.trend * r1.resid, r2.seasonal * r1.trend * r2.resid
-    elif (item, model) == ('trend', 'additive'):
-        return r1.seasonal + r2.trend + r1.resid, r2.seasonal + r1.trend + r2.resid
-    elif (item, model) == ('seasonal', 'additive'):
-        return r2.seasonal + r1.trend + r1.resid, r1.seasonal + r2.trend + r2.resid
     elif (item, model) == ('seasonal', 'multiplicative'):
         return r2.seasonal * r1.trend * r1.resid, r1.seasonal * r2.trend * r2.resid
     else:
